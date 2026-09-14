@@ -15,5 +15,18 @@ class CompteurSessions(Observateur):
     def actualiser(self, sujet) -> None:
         # À compléter :
         # Récupérez sessions_completees depuis sujet.get_donnees()
+        
+        DUREE_PAUSE = 5 * 60
+        sujet.get_donnees()
+        donnees = sujet.get_donnees()
+        donnees = donnees["sessions_completees"]
+
+        
         # Mettez à jour le label
-        pass
+        if self.label_etat.cget("text") == "Travail":
+                self.sessions_completees += 1
+                self.label_sessions.config(
+                    text=f"Sessions complétées : {self.sessions_completees}"
+                )
+                self.label_etat.config(text="Pause", fg="blue")
+                self.temps_restant = DUREE_PAUSE

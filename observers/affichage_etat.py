@@ -2,6 +2,7 @@ import tkinter as tk
 from observers.observer import Observateur
 
 
+
 class AffichageEtat(Observateur):
 
     def __init__(self, parent):
@@ -11,6 +12,9 @@ class AffichageEtat(Observateur):
     def actualiser(self, sujet) -> None:
         # À compléter :
         # Récupérez etat depuis sujet.get_donnees()
+        sujet.get_donnees()
+        donnees = sujet.get_donnees()
+        donnees = donnees["etat"]
         # Mettez à jour le label
         # Couleur : noir pour "Travail", bleu pour "Pause"
-        pass
+        self.label_etat.config(text="Travail", fg="blue")

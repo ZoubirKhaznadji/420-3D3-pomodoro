@@ -17,6 +17,8 @@ class Dashboard(tk.Tk):
         self.resizable(False, False)
         self._minuteur = minuteur
         self._en_marche = False
+        minuteur = Minuteur()
+        
 
         self._creer_observateurs()
         self._abonner_observateurs()
@@ -25,13 +27,32 @@ class Dashboard(tk.Tk):
     def _creer_observateurs(self) -> None:
         # À compléter :
         # Instanciez AffichageEtat, AffichageTemps, BarreProgression,
-        # CompteurSessions et LoggerSession
-        pass
+        self._minuteur = Minuteur()
+        etat = AffichageEtat()
+        self._minuteur.abonner(etat)
+        temps = AffichageTemps()
+        self._minuteur.abonner(temps)
+        barre = BarreProgression()
+        self._minuteur.abonner(barre)
+        logger = LoggerSession("pomodoro.log")
+        self._minuteur.abonner(logger)
+        compteur = CompteurSessions()
+        self._minuteur.abonner(compteur)
+
 
     def _abonner_observateurs(self) -> None:
         # À compléter :
         # Abonnez tous les observateurs au minuteur
-        pass
+        etat = AffichageEtat()
+        self._minuteur.abonner(etat)
+        temps = AffichageTemps()
+        self._minuteur.abonner(temps)
+        barre = BarreProgression()
+        self._minuteur.abonner(barre)
+        logger = LoggerSession("pomodoro.log")
+        self._minuteur.abonner(logger)
+        compteur = CompteurSessions()
+        self._minuteur.abonner(compteur)
 
     def _creer_boutons(self) -> None:
         frame = tk.Frame(self)
@@ -52,23 +73,45 @@ class Dashboard(tk.Tk):
         # À compléter :
         # Activez le minuteur et démarrez la boucle _tick()
         # Mettez à jour les boutons
-        pass
+        self.en_marche = True
+        self.en_pause = False
+        self.btn_start.config(state=tk.DISABLED)
+        self.btn_pause.config(state=tk.NORMAL)
+        self.tick()
 
     def _pause(self) -> None:
         # À compléter :
         # Appelez basculer_pause() sur le minuteur
         # Mettez à jour le texte du bouton
         # Si on reprend, relancez _tick()
-        pass
+        if self.en_pause:
+            self.en_pause = False
+            self.btn_pause.config(text="Pause")
+            self.tick()
+        else:
+            self.en_pause = True
+            self.btn_pause.config(text="Reprendre")
 
     def _reset(self) -> None:
         # À compléter :
         # Réinitialisez le minuteur
         # Mettez à jour les boutons
-        pass
+        DUREE_TRAVAIL = 25 * 60
+        self.en_marche = False
+        self.en_pause = False
+        self.temps_restant = DUREE_TRAVAIL
+        self.btn_start.config(state=tk.NORMAL)
+        self.btn_pause.config(state=tk.DISABLED)
+        self.btn_pause.config(text="Pause")
+        self.label_etat.config(text="Travail", fg="black")
+        self.label_temps.config(text="25:00")
+        self.canvas.delete("all")
+        self.canvas.create_rectangle(0, 0, 300, 20, fill="green", outline="")
 
     def _tick(self) -> None:
         # À compléter :
         # Si en marche et pas en pause : appeler minuteur.tick()
         # Planifier le prochain appel avec self.after()
-        pass
+        if self.en_marche and not self.en_pause :
+            self._minuteur.tick()
+        self._fenetre.after(1000, self.tick)
