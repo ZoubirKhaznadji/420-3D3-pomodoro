@@ -1,110 +1,96 @@
-import tkinter as tk
+import wx
 from datetime import datetime
 
 
-DUREE_TRAVAIL = 25 * 60   # 25 minutes en secondes
-DUREE_PAUSE = 5 * 60      # 5 minutes en secondes
+DUREE_TRAVAIL = 25 * 60
+DUREE_PAUSE = 5 * 60
 
 
-class App:
+class App(wx.Frame):
     def __init__(self):
-        self.fenetre = tk.Tk()
-        self.fenetre.title("Minuteur Pomodoro")
-        self.fenetre.resizable(False, False)
+        super().__init__(None, title="Minuteur Pomodoro")
+        self.SetSize((350, 380))
 
         self.temps_restant = DUREE_TRAVAIL
         self.en_marche = False
         self.en_pause = False
         self.sessions_completees = 0
 
-        # Affichage de l'état
-        self.label_etat = tk.Label(
-            self.fenetre,
-            text="Travail",
-            font=("Arial", 16, "bold")
-        )
-        self.label_etat.pack(pady=10)
+        panel = wx.Panel(self)
+        sizer = wx.BoxSizer(wx.VERTICAL)
 
-        # Affichage du temps
-        self.label_temps = tk.Label(
-            self.fenetre,
-            text="25:00",
-            font=("Arial", 48, "bold")
-        )
-        self.label_temps.pack(pady=10)
+        # Affichage état
+        self.label_etat = wx.StaticText(panel, label="Travail")
+        font_etat = self.label_etat.GetFont()
+        font_etat.SetPointSize(16)
+        font_etat.MakeBold()
+        self.label_etat.SetFont(font_etat)
+        sizer.Add(self.label_etat, 0, wx.ALL | wx.CENTER, 10)
+
+        # Affichage temps
+        self.label_temps = wx.StaticText(panel, label="25:00")
+        font_temps = self.label_temps.GetFont()
+        font_temps.SetPointSize(48)
+        font_temps.MakeBold()
+        self.label_temps.SetFont(font_temps)
+        sizer.Add(self.label_temps, 0, wx.ALL | wx.CENTER, 10)
 
         # Barre de progression
-        self.canvas = tk.Canvas(
-            self.fenetre,
-            width=300,
-            height=20,
-            bg="white"
-        )
-        self.canvas.pack(pady=10)
+        self.barre = wx.Gauge(panel, range=100, size=(300, 20))
+        self.barre.SetValue(100)
+        sizer.Add(self.barre, 0, wx.ALL | wx.CENTER, 10)
 
-        # Affichage des sessions
-        self.label_sessions = tk.Label(
-            self.fenetre,
-            text="Sessions complétées : 0",
-            font=("Arial", 12)
+        # Compteur de sessions
+        self.label_sessions = wx.StaticText(
+            panel, label="Sessions complétées : 0"
         )
-        self.label_sessions.pack(pady=5)
+        sizer.Add(self.label_sessions, 0, wx.ALL | wx.CENTER, 5)
 
         # Boutons
-        frame_boutons = tk.Frame(self.fenetre)
-        frame_boutons.pack(pady=10)
+        frame_boutons = wx.BoxSizer(wx.HORIZONTAL)
+        self.btn_start = wx.Button(panel, label="Démarrer")
+        self.btn_pause = wx.Button(panel, label="Pause")
+        self.btn_reset = wx.Button(panel, label="Réinitialiser")
+        self.btn_pause.Disable()
 
-        self.btn_start = tk.Button(
-            frame_boutons,
-            text="Démarrer",
-            command=self.demarrer
-        )
-        self.btn_start.pack(side=tk.LEFT, padx=5)
+        self.btn_start.Bind(wx.EVT_BUTTON, self.demarrer)
+        self.btn_pause.Bind(wx.EVT_BUTTON, self.pause)
+        self.btn_reset.Bind(wx.EVT_BUTTON, self.reinitialiser)
 
-        self.btn_pause = tk.Button(
-            frame_boutons,
-            text="Pause",
-            command=self.pause,
-            state=tk.DISABLED
-        )
-        self.btn_pause.pack(side=tk.LEFT, padx=5)
+        frame_boutons.Add(self.btn_start, 0, wx.ALL, 5)
+        frame_boutons.Add(self.btn_pause, 0, wx.ALL, 5)
+        frame_boutons.Add(self.btn_reset, 0, wx.ALL, 5)
+        sizer.Add(frame_boutons, 0, wx.CENTER)
 
-        self.btn_reset = tk.Button(
-            frame_boutons,
-            text="Réinitialiser",
-            command=self.reinitialiser
-        )
-        self.btn_reset.pack(side=tk.LEFT, padx=5)
+        panel.SetSizer(sizer)
+        self.Fit()
 
-        self.fenetre.mainloop()
-
-    def demarrer(self):
+    def demarrer(self, event):
         self.en_marche = True
         self.en_pause = False
-        self.btn_start.config(state=tk.DISABLED)
-        self.btn_pause.config(state=tk.NORMAL)
+        self.btn_start.Disable()
+        self.btn_pause.Enable()
         self.tick()
 
-    def pause(self):
+    def pause(self, event):
         if self.en_pause:
             self.en_pause = False
-            self.btn_pause.config(text="Pause")
+            self.btn_pause.SetLabel("Pause")
             self.tick()
         else:
             self.en_pause = True
-            self.btn_pause.config(text="Reprendre")
+            self.btn_pause.SetLabel("Reprendre")
 
-    def reinitialiser(self):
+    def reinitialiser(self, event):
         self.en_marche = False
         self.en_pause = False
         self.temps_restant = DUREE_TRAVAIL
-        self.btn_start.config(state=tk.NORMAL)
-        self.btn_pause.config(state=tk.DISABLED)
-        self.btn_pause.config(text="Pause")
-        self.label_etat.config(text="Travail", fg="black")
-        self.label_temps.config(text="25:00")
-        self.canvas.delete("all")
-        self.canvas.create_rectangle(0, 0, 300, 20, fill="green", outline="")
+        self.btn_start.Enable()
+        self.btn_pause.Disable()
+        self.btn_pause.SetLabel("Pause")
+        self.label_etat.SetLabel("Travail")
+        self.label_temps.SetLabel("25:00")
+        self.barre.SetValue(100)
 
     def tick(self):
         if not self.en_marche or self.en_pause:
@@ -116,30 +102,27 @@ class App:
             # Mettre à jour le temps
             minutes = self.temps_restant // 60
             secondes = self.temps_restant % 60
-            self.label_temps.config(text=f"{minutes:02d}:{secondes:02d}")
+            self.label_temps.SetLabel(f"{minutes:02d}:{secondes:02d}")
 
-            # Mettre à jour la barre de progression
-            if self.en_pause is False and self.label_etat.cget("text") == "Travail":
+            # Mettre à jour la barre
+            if self.label_etat.GetLabel() == "Travail":
                 duree_totale = DUREE_TRAVAIL
             else:
                 duree_totale = DUREE_PAUSE
-            largeur = int(300 * self.temps_restant / duree_totale)
-            self.canvas.delete("all")
-            self.canvas.create_rectangle(0, 0, largeur, 20, fill="green", outline="")
+            valeur = int(100 * self.temps_restant / duree_totale)
+            self.barre.SetValue(valeur)
 
-            self.fenetre.after(1000, self.tick)
+            wx.CallLater(1000, self.tick)
 
         else:
-            # Session terminée
-            if self.label_etat.cget("text") == "Travail":
+            if self.label_etat.GetLabel() == "Travail":
                 self.sessions_completees += 1
-                self.label_sessions.config(
-                    text=f"Sessions complétées : {self.sessions_completees}"
+                self.label_sessions.SetLabel(
+                    f"Sessions complétées : {self.sessions_completees}"
                 )
-                self.label_etat.config(text="Pause", fg="blue")
+                self.label_etat.SetLabel("Pause")
                 self.temps_restant = DUREE_PAUSE
 
-                # Écrire dans le log
                 horodatage = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 with open("pomodoro.log", 'a') as f:
                     f.write(
@@ -147,11 +130,14 @@ class App:
                         f"complétée\n"
                     )
             else:
-                self.label_etat.config(text="Travail", fg="black")
+                self.label_etat.SetLabel("Travail")
                 self.temps_restant = DUREE_TRAVAIL
 
-            self.fenetre.after(1000, self.tick)
+            wx.CallLater(1000, self.tick)
 
 
 if __name__ == "__main__":
-    app = App()
+    app = wx.App()
+    fenetre = App()
+    fenetre.Show()
+    app.MainLoop()
